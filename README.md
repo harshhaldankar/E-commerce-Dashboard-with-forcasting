@@ -48,7 +48,8 @@ The dataset contains comprehensive e-commerce and delivery data including:
 ## 📷 Dashboard Screenshots
 
 ### Main Dashboard Interface
-![E-commerce Operations Dashboard](dashboard-screenshot.png)
+![E-commerce Operations Dashboard](<img width="1918" height="861" alt="Screenshot 2025-07-24 213632" src="https://github.com/user-attachments/assets/ad418b0e-f8c8-4a32-8d6d-53e9296ae7e1" />
+)
 *Complete dashboard showing orders by city & hub, driver performance metrics, and revenue analytics with KPI cards and interactive filtering*
 
 ### Key Dashboard Sections:
@@ -86,8 +87,6 @@ kaggle datasets download -d nosbielcs/brazilian-delivery-center
 streamlit run app.py
 ```
 
-5. **Access the dashboard**
-Open your browser and navigate to `http://localhost:8501`
 
 ## 🤖 Forecasting Models (Currently Working On)
 
@@ -114,61 +113,12 @@ Open your browser and navigate to `http://localhost:8501`
 - **Model Evaluation**: Cross-validation and accuracy metrics
 - **Integration**: Seamless integration with Streamlit dashboard
 
-## 🌐 Future Scope & Organizational Implementation
+## 🏢 Value Proposition for Large E-commerce Platforms:
 
-### Phase 1: Advanced Analytics & Cloud Deployment
-- **☁️ Cloud Migration**: Deploy on AWS/Azure for scalability and reliability
-- **🔄 Real-time Data Pipeline**: Implement live data streaming for real-time updates
-- **📱 Mobile Dashboard**: Responsive mobile interface for executives
-- **🔗 API Development**: RESTful APIs for external system integration
-
-### Phase 2: Enterprise Features for Large Organizations
-
-#### For E-commerce & Retail Companies:
-- **🏢 Multi-tenant Architecture**: Support multiple business units and regions
-- **👥 Advanced User Management**: Role-based access control (Admin, Manager, Analyst)
-- **📊 Custom KPI Builder**: Create custom metrics based on business needs
-- **🚨 Alert System**: Automated alerts for business anomalies and thresholds
-
-#### For Logistics & Delivery Operations:
-- **🚚 Fleet Management Integration**: Connect with existing fleet management systems
-- **📍 Route Optimization**: AI-powered delivery route planning
-- **📦 Inventory Forecasting**: Predict inventory needs based on demand patterns
-- **⚡ Performance Benchmarking**: Compare performance across regions and time periods
-
-### Phase 3: Advanced AI & Automation
-
-#### Predictive Analytics:
-- **🔮 Demand Forecasting**: Predict seasonal demand for better planning
-- **💰 Revenue Optimization**: Dynamic pricing recommendations
-- **🎯 Customer Segmentation**: AI-powered customer behavior analysis
-- **📈 Growth Prediction**: Business growth forecasting and scenario planning
-
-#### Business Intelligence:
-- **📋 Automated Reporting**: Scheduled reports and executive dashboards
-- **🔍 Anomaly Detection**: AI-powered detection of unusual patterns
-- **💡 Business Insights**: Automated insights and recommendations
-- **🎛️ What-if Analysis**: Scenario modeling for strategic planning
-
-## 🏢 Value Proposition for Organizations
-
-### For Large E-commerce Platforms:
 - **Operational Excellence**: Monitor and optimize delivery operations across multiple cities
 - **Cost Optimization**: Identify inefficiencies in delivery routes and driver performance
 - **Customer Satisfaction**: Reduce delivery failures and improve service quality
 - **Strategic Planning**: Data-driven decisions for expansion and resource allocation
-
-### For Logistics Companies:
-- **Performance Monitoring**: Track driver and hub performance in real-time
-- **Resource Optimization**: Optimize driver allocation and route planning
-- **Financial Planning**: Accurate revenue forecasting for budget planning
-- **Competitive Advantage**: Leverage data analytics for market positioning
-
-### For Regional Operations:
-- **Multi-city Management**: Centralized dashboard for operations across multiple cities
-- **Scalability**: Easily add new cities and hubs to the system
-- **Standardization**: Consistent metrics and reporting across all locations
-- **Growth Support**: Infrastructure ready for business expansion
 
 ## 📁 Project Structure
 
@@ -186,15 +136,8 @@ E-commerce-Dashboard-with-forcasting/
 
 ## 🔗 Links & Resources
 
-- **Repository**: https://github.com/harshhaldankar/E-commerce-Dashboard-with-forcasting
 - **Dataset**: [Brazilian Delivery Center - Kaggle](https://www.kaggle.com/datasets/nosbielcs/brazilian-delivery-center)
-- **Live Dashboard**: [Streamlit App - Coming Soon]
-
-## 👨‍💻 Author
-
-**Harsh Haldankar**
-- GitHub: [@harshhaldankar](https://github.com/harshhaldankar)
-
+- **Live Dashboard**: [https://e-commerce-dashboard-with-forcasting.streamlit.app/]
 ---
 
 *This project demonstrates practical application of data analytics, business intelligence, and machine learning in real-world e-commerce and delivery operations.*
