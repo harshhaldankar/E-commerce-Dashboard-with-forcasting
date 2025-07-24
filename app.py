@@ -17,9 +17,9 @@ def download_database():
     
     # Get database URL from secrets or environment
     try:
-        db_url = st.secrets["DATABASE_URL"]
+        db_url = st.secrets["Database_URL"]
     except:
-        db_url = os.getenv('DATABASE_URL')
+        db_url = os.getenv('Database_URL')
     
     if not db_url:
         st.error("❌ DATABASE_URL not found in secrets or environment variables!")
