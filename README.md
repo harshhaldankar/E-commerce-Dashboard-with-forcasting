@@ -48,8 +48,8 @@ The dataset contains comprehensive e-commerce and delivery data including:
 ## 📷 Dashboard Screenshots
 
 ### Main Dashboard Interface
-![E-commerce Operations Dashboard](<img width="1918" height="861" alt="Screenshot 2025-07-24 213632" src="https://github.com/user-attachments/assets/ad418b0e-f8c8-4a32-8d6d-53e9296ae7e1" />
-)
+![E-commerce Operations Dashboard] <img width="1918" height="861" alt="Screenshot 2025-07-24 213632" src="https://github.com/user-attachments/assets/ad418b0e-f8c8-4a32-8d6d-53e9296ae7e1" />
+
 *Complete dashboard showing orders by city & hub, driver performance metrics, and revenue analytics with KPI cards and interactive filtering*
 
 ### Key Dashboard Sections:
