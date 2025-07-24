@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import sqlite3
@@ -86,6 +85,16 @@ with st.sidebar:
     st.markdown("### 📅 Date Filter")
     start_date = st.date_input("Start Date", date(2021, 1, 1))
     end_date = st.date_input("End Date", date(2021, 4, 30))
+    
+    # Database info
+    st.markdown("### 📊 Database Info")
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM orders")
+        total_records = cursor.fetchone()[0]
+        st.metric("Total Orders", f"{total_records:,}")
+    except:
+        st.warning("Could not fetch database stats")
 
 # ----------------------
 # 1. ORDERS BY HUB/CITY
@@ -93,61 +102,81 @@ with st.sidebar:
 
 st.header("🏙️ Orders by City & Hub")
 
+# SQLite compatible query
 query_orders = """
 SELECT 
-  h.hub_city AS City,
-  h.hub_name AS Hub,
-  COUNT(CASE WHEN o.order_status = 'FINISHED' THEN 1 END) AS Total_Orders,
-  COUNT(CASE WHEN o.order_status = 'CANCELED' THEN 1 END) AS Cancelled_Orders,
-  ROUND(
-    1.0 * COUNT(CASE WHEN o.order_status = 'CANCELED' THEN 1 END) 
-    / COUNT(o.order_id) * 100, 2
-  ) || ' %' AS Cancelled_Percent
+    h.hub_city AS city,
+    h.hub_name AS hub,
+    COUNT(CASE WHEN o.order_status = 'FINISHED' THEN 1 END) AS total_orders,
+    COUNT(CASE WHEN o.order_status = 'CANCELED' THEN 1 END) AS cancelled_orders,
+    ROUND(
+        100.0 * COUNT(CASE WHEN o.order_status = 'CANCELED' THEN 1 END) 
+        / NULLIF(COUNT(*), 0), 2
+    ) AS cancelled_percent
 FROM orders o
 JOIN stores s ON o.store_id = s.store_id
 JOIN hubs h ON s.hub_id = h.hub_id
 WHERE DATE(
-    o.order_created_year || '-' || 
-    printf('%02d', o.order_created_month) || '-' || 
-    printf('%02d', o.order_created_day)
+    o.order_created_year || '-' ||
+    PRINTF('%02d', o.order_created_month) || '-' ||
+    PRINTF('%02d', o.order_created_day)
 ) BETWEEN ? AND ?
 GROUP BY h.hub_city, h.hub_name
 ORDER BY h.hub_city;
 """
 
-params = [start_date, end_date]
-df_orders = pd.read_sql_query(query_orders, conn, params=params)
+try:
+    # Convert dates to strings for SQLite
+    start_date_str = start_date.strftime('%Y-%m-%d')
+    end_date_str = end_date.strftime('%Y-%m-%d')
+    df_orders = pd.read_sql_query(query_orders, conn, params=[start_date_str, end_date_str])   
+except Exception as e:
+    st.error(f"Error executing orders query: {e}")
+    df_orders = pd.DataFrame()
 
 # KPI Cards for Orders
 kpi_query1 = """ 
 SELECT 
-  COUNT(CASE WHEN order_status = 'FINISHED' THEN 1 END ) AS Total_Orders,
-  COUNT(CASE WHEN order_status = 'CANCELED' THEN 1 END) AS Cancelled_Orders,
+  COUNT(CASE WHEN order_status = 'FINISHED' THEN 1 END ) AS total_orders,
+  COUNT(CASE WHEN order_status = 'CANCELED' THEN 1 END) AS cancelled_orders,
   ROUND(
-    1.0 * COUNT(CASE WHEN order_status = 'CANCELED' THEN 1 END) 
-    / COUNT(order_id) * 100, 2
-  ) || ' %' AS Cancelled_Percent
+    100.0 * COUNT(CASE WHEN order_status = 'CANCELED' THEN 1 END) 
+    / NULLIF(COUNT(order_id), 0), 2
+  ) AS cancelled_percent
 FROM orders
 WHERE DATE(
-    order_created_year || '-' || 
-    printf('%02d', order_created_month) || '-' || 
-    printf('%02d', order_created_day)
-) BETWEEN ? AND ? """
+    order_created_year || '-' ||
+    PRINTF('%02d', order_created_month) || '-' ||
+    PRINTF('%02d', order_created_day)
+) BETWEEN ? AND ?
+"""
 
-kpi_df1 = pd.read_sql_query(kpi_query1, conn , params=params)
-total_orders = int(kpi_df1['Total_Orders'][0]) if kpi_df1['Total_Orders'][0] else 0
-cancelled_orders = int(kpi_df1['Cancelled_Orders'][0]) if kpi_df1['Cancelled_Orders'][0] else 0
-cancelled_percent = kpi_df1['Cancelled_Percent'][0] if kpi_df1['Cancelled_Percent'][0] else "0 %"
+try:
+    start_date_str = start_date.strftime('%Y-%m-%d')
+    end_date_str = end_date.strftime('%Y-%m-%d')
+    kpi_df1 = pd.read_sql_query(kpi_query1, conn, params=[start_date_str, end_date_str])
+    if not kpi_df1.empty:
+        total_orders = int(kpi_df1['total_orders'].iloc[0]) if kpi_df1['total_orders'].iloc[0] else 0
+        cancelled_orders = int(kpi_df1['cancelled_orders'].iloc[0]) if kpi_df1['cancelled_orders'].iloc[0] else 0
+        cancelled_percent = f"{kpi_df1['cancelled_percent'].iloc[0]}%" if kpi_df1['cancelled_percent'].iloc[0] else "0%"
+    else:
+        total_orders = 0
+        cancelled_orders = 0
+        cancelled_percent = "0%"
+except Exception as e:
+    st.error(f"Error executing KPI query: {e}")
+    total_orders = 0
+    cancelled_orders = 0
+    cancelled_percent = "0%"
 
 col1, col2, col3 = st.columns(3)
 col1.metric("📦 Total Orders", f"{total_orders:,}")
 col2.metric("❌ Cancelled Orders", f"{cancelled_orders:,}")
 col3.metric("🚫 Cancellation Rate", cancelled_percent)
 
-st.dataframe(df_orders, use_container_width=True)
-
-# Download Orders CSV
 if not df_orders.empty:
+    st.dataframe(df_orders, use_container_width=True)
+    # Download Orders CSV
     csv_orders = df_orders.to_csv(index=False).encode("utf-8")
     st.download_button("⬇️ Download Orders CSV", csv_orders, "order_metrics.csv", "text/csv")
 else:
@@ -160,12 +189,12 @@ st.header("👨‍✈️ Driver Performance Metrics")
 
 query_driver = """
 SELECT 
-    o.order_id,
-    d.driver_id,
-    d.delivery_distance_meters,
-    d.delivery_status,
-    o.order_moment_collected,
-    o.order_moment_delivered
+  o.order_id,
+  d.driver_id,
+  d.delivery_distance_meters,
+  d.delivery_status,
+  o.order_moment_collected,
+  o.order_moment_delivered
 FROM deliveries d
 JOIN orders o ON o.order_id = d.delivery_order_id
 JOIN drivers dr ON d.driver_id = dr.driver_id
@@ -173,31 +202,34 @@ WHERE o.order_moment_collected IS NOT NULL AND o.order_moment_delivered IS NOT N
 AND o.order_status = 'FINISHED'
 """
 
-df = pd.read_sql_query(query_driver, conn)
+try:
+    df = pd.read_sql_query(query_driver, conn)
+    # Convert timestamps
+    df['collected_dt'] = pd.to_datetime(df['order_moment_collected'], errors='coerce')
+    df['delivered_dt'] = pd.to_datetime(df['order_moment_delivered'], errors='coerce')
 
-# Convert timestamps
-df['collected_dt'] = pd.to_datetime(df['order_moment_collected'], errors='coerce')
-df['delivered_dt'] = pd.to_datetime(df['order_moment_delivered'], errors='coerce')
+    df = df.dropna(subset=['collected_dt', 'delivered_dt'])
+    df = df[(df['collected_dt'].dt.date >= start_date) & (df['collected_dt'].dt.date <= end_date)]
 
-df = df.dropna(subset=['collected_dt', 'delivered_dt'])
-df = df[(df['collected_dt'].dt.date >= start_date) & (df['collected_dt'].dt.date <= end_date)]
+    df['delivery_time_mins'] = (df['delivered_dt'] - df['collected_dt']).dt.total_seconds() / 60
 
-df['delivery_time_mins'] = (df['delivered_dt'] - df['collected_dt']).dt.total_seconds() / 60
+    driver_metrics = df.groupby(['driver_id']).agg(
+        total_deliveries=('order_id', 'count'),
+        avg_delivery_distance=('delivery_distance_meters', 'mean'),
+        delivery_failure_count=('delivery_status', lambda x: (x != 'DELIVERED').sum()),
+        delivery_fail_rate_percent=('delivery_status', lambda x: (x != 'DELIVERED').mean() * 100),
+        avg_delivery_time_mins=('delivery_time_mins', 'mean')
+    ).round(2).reset_index()
 
-driver_metrics = df.groupby(['driver_id']).agg(
-    total_deliveries=('order_id', 'count'),
-    avg_delivery_distance=('delivery_distance_meters', 'mean'),
-    delivery_failure_count=('delivery_status', lambda x: (x != 'DELIVERED').sum()),
-    delivery_fail_rate_percent=('delivery_status', lambda x: (x != 'DELIVERED').mean() * 100),
-    avg_delivery_time_mins=('delivery_time_mins', 'mean')
-).round(2).reset_index()
+    if not driver_metrics.empty:
+        st.dataframe(driver_metrics, use_container_width=True)
+        csv_driver = driver_metrics.to_csv(index=False).encode("utf-8")
+        st.download_button("⬇️ Download Driver Metrics CSV", csv_driver, "driver_metrics.csv", "text/csv")
+    else:
+        st.warning("No driver data available for selected date range.")
 
-if not driver_metrics.empty:
-    st.dataframe(driver_metrics, use_container_width=True)
-    csv_driver = driver_metrics.to_csv(index=False).encode("utf-8")
-    st.download_button("⬇️ Download Driver Metrics CSV", csv_driver, "driver_metrics.csv", "text/csv")
-else:
-    st.warning("No driver data available for selected date range.")
+except Exception as e:
+    st.error(f"Error processing driver data: {e}")
 
 # -------------------------------
 # 3. REVENUE & PAYMENT PERFORMANCE
@@ -207,49 +239,69 @@ st.header("💰 Revenue by City & Hub")
 
 revenue_query = """
 SELECT
-  h.hub_city AS City,
-  h.hub_name AS Hub,
-  COUNT(o.order_id) AS Total_Orders,
-  SUM(o.order_amount) AS Total_Revenue,
-  ROUND(AVG(o.order_amount), 2) AS Avg_Payment_Amount      
+  h.hub_city AS city,
+  h.hub_name AS hub,
+  COUNT(o.order_id) AS total_orders,
+  SUM(o.order_amount) AS total_revenue,
+  ROUND(AVG(o.order_amount), 2) AS avg_payment_amount
 FROM orders o 
 JOIN stores s ON o.store_id = s.store_id
 JOIN hubs h ON s.hub_id = h.hub_id
 WHERE o.order_status = 'FINISHED'
 AND DATE(
-      o.order_created_year || '-' ||
-      printf('%02d', o.order_created_month) || '-' ||
-      printf('%02d', o.order_created_day)
-  ) BETWEEN ? AND ?
+    o.order_created_year || '-' ||
+    PRINTF('%02d', o.order_created_month) || '-' ||
+    PRINTF('%02d', o.order_created_day)
+) BETWEEN ? AND ?
 GROUP BY h.hub_city, h.hub_name
 ORDER BY h.hub_city;
 """
 
-revenue_df = pd.read_sql_query(revenue_query, conn, params=[start_date, end_date])
-
+try:
+    start_date_str = start_date.strftime('%Y-%m-%d')
+    end_date_str = end_date.strftime('%Y-%m-%d')
+    revenue_df = pd.read_sql_query(revenue_query, conn, params=[start_date_str, end_date_str])
+except Exception as e:
+    st.error(f"Error executing revenue query: {e}")
+    revenue_df = pd.DataFrame()
+    
 # KPI Summary for Revenue
 kpi_query2 = """
 SELECT
-  COUNT(DISTINCT order_id) AS Total_Orders,
-  SUM(order_amount) AS Total_Revenue,
-  ROUND(AVG(order_amount), 2) AS Avg_Order_Value
+  COUNT(DISTINCT order_id) AS total_orders,
+  SUM(order_amount) AS total_revenue,
+  ROUND(AVG(order_amount), 2) AS avg_order_value
 FROM orders 
 WHERE order_status = 'FINISHED'
   AND DATE(
     order_created_year || '-' ||
-    printf('%02d', order_created_month) || '-' ||
-    printf('%02d', order_created_day)
-  ) BETWEEN ? AND ?;
+    PRINTF('%02d', order_created_month) || '-' ||
+    PRINTF('%02d', order_created_day)
+) BETWEEN ? AND ?;
 """
 
-kpi_df2 = pd.read_sql_query(kpi_query2, conn, params=[start_date, end_date])
-total_orders = int(kpi_df2['Total_Orders'][0]) if kpi_df2['Total_Orders'][0] else 0
-total_revenue = float(kpi_df2['Total_Revenue'][0]) if kpi_df2['Total_Revenue'][0] else 0.0
-avg_order_value = float(kpi_df2['Avg_Order_Value'][0]) if kpi_df2['Avg_Order_Value'][0] else 0.0
+try:
+    start_date_str = start_date.strftime('%Y-%m-%d')
+    end_date_str = end_date.strftime('%Y-%m-%d')
+    
+    kpi_df2 = pd.read_sql_query(kpi_query2, conn, params=[start_date_str, end_date_str])
+    if not kpi_df2.empty:
+        total_orders_rev = int(kpi_df2['total_orders'].iloc[0]) if kpi_df2['total_orders'].iloc[0] else 0
+        total_revenue = float(kpi_df2['total_revenue'].iloc[0]) if kpi_df2['total_revenue'].iloc[0] else 0.0
+        avg_order_value = float(kpi_df2['avg_order_value'].iloc[0]) if kpi_df2['avg_order_value'].iloc[0] else 0.0
+    else:
+        total_orders_rev = 0
+        total_revenue = 0.0
+        avg_order_value = 0.0
+except Exception as e:
+    st.error(f"Error executing revenue KPI query: {e}")
+    total_orders_rev = 0
+    total_revenue = 0.0
+    avg_order_value = 0.0
 
 col1, col2, col3 = st.columns(3)
 col1.metric("💰 Total Revenue", f"${total_revenue:,.2f}")
-col2.metric("📦 Total Orders", f"{total_orders:,}")
+col2.metric("📦 Total Orders", f"{total_orders_rev:,}")
 col3.metric("💳 Avg Order Value", f"${avg_order_value:,.2f}")
 
 # Revenue Table & Chart
@@ -259,11 +311,16 @@ if not revenue_df.empty:
     st.subheader("📊 Total Revenue by City and Hub")
     fig = px.bar(
         revenue_df,
-        x="Hub",
-        y="Total_Revenue",
-        color="City",
+        x="hub",
+        y="total_revenue",
+        color="city",
         text_auto='.2s',
         title="Total Revenue by Hub (Grouped by City)"
+    )
+    fig.update_layout(
+        xaxis_title="Hub",
+        yaxis_title="Total Revenue ($)",
+        showlegend=True
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -273,5 +330,8 @@ else:
     st.warning("No revenue data available for selected date range.")
 
 # Close DB connection
-# conn.close()
+try:
+    conn.close()
+except:
+    pass
 
