@@ -1,20 +1,90 @@
+# download_db.py - Helper for Streamlit Cloud
+import os
+import requests
+import streamlit as st
+from pathlib import Path
+
+@st.cache_data
+def download_database():
+    """Download database from external URL if not exists locally"""
+    db_path = 'e_commerce.db'
+    
+    # Check if database already exists
+    if os.path.exists(db_path):
+        return db_path
+    
+    # Get database URL from secrets or environment
+    db_url = st.secrets.get("DATABASE_URL") or os.getenv('DATABASE_URL')
+    
+    if not db_url:
+        st.error("❌ DATABASE_URL not found in secrets or environment variables!")
+        st.stop()
+    
+    try:
+        st.info("📥 Downloading database... This may take a moment.")
+        
+        # Download with progress
+        response = requests.get(db_url, stream=True)
+        response.raise_for_status()
+        
+        total_size = int(response.headers.get('content-length', 0))
+        
+        with open(db_path, 'wb') as f:
+            if total_size > 0:
+                downloaded = 0
+                progress_bar = st.progress(0)
+                
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        progress = min(downloaded / total_size, 1.0)
+                        progress_bar.progress(progress)
+                        
+                progress_bar.empty()
+            else:
+                f.write(response.content)
+        
+        st.success("✅ Database downloaded successfully!")
+        return db_path
+        
+    except Exception as e:
+        st.error(f"❌ Failed to download database: {e}")
+        st.stop()
+
+# Enhanced app.py for Streamlit Cloud
 import streamlit as st
 import pandas as pd
 import sqlite3
-from datetime import datetime
+from datetime import date, datetime
 import plotly.express as px
+from download_db import download_database
+
+# Download database first
+db_path = download_database()
 
 # --- Streamlit Page Setup ---
-st.set_page_config(page_title="E-Commerce Dashboard", layout="wide")
+st.set_page_config(page_title="E-Commerce Dashboard", layout="wide", initial_sidebar_state="auto")
 st.title("📦 E-Commerce Operations Dashboard")
 
-# --- DB Connection ---
-conn = sqlite3.connect("e_commerce.db")
+# --- Database Connection ---
+@st.cache_resource
+def get_db_connection():
+    """Create database connection with caching"""
+    try:
+        conn = sqlite3.connect(db_path, check_same_thread=False)
+        return conn
+    except Exception as e:
+        st.error(f"Database connection failed: {e}")
+        st.stop()
+
+conn = get_db_connection()
 
 # --- Sidebar Filters ---
-st.sidebar.header("📅 Date Filter")
-start_date = st.sidebar.date_input("Start Date", value=datetime(2021, 1, 1))
-end_date = st.sidebar.date_input("End Date", value=datetime(2021, 4, 30))
+with st.sidebar:
+    st.markdown("### 📅 Date Filter")
+    start_date = st.date_input("Start Date", date(2021, 1, 1))
+    end_date = st.date_input("End Date", date(2021, 4, 30))
 
 # ----------------------
 # 1. ORDERS BY HUB/CITY
