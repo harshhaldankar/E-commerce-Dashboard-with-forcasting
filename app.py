@@ -17,26 +17,9 @@ def download_database():
     if not db_url:
         st.error("❌ DATABASE_URL not found in secrets or environment variables!")
         st.stop()
-
-    st.info("📥 Downloading database... This may take a moment.")
     try:
         response = requests.get(db_url, stream=True)
         response.raise_for_status()
-        total_size = int(response.headers.get('content-length', 0))
-        with open(db_path, 'wb') as f:
-            if total_size > 0:
-                downloaded = 0
-                progress_bar = st.progress(0)
-                for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
-                        downloaded += len(chunk)
-                        progress_bar.progress(min(downloaded / total_size, 1.0))
-                progress_bar.empty()
-            else:
-                f.write(response.content)
-        st.success("✅ Database downloaded successfully!")
-        return db_path
     except Exception as e:
         st.error(f"❌ Failed to download database: {e}")
         st.stop()
@@ -64,16 +47,6 @@ with st.sidebar:
     start_date = st.date_input("Start Date", date(2021, 1, 1))
     end_date = st.date_input("End Date", date(2021, 4, 30))
     
-    # Database info
-    st.markdown("### 📊 Database Info")
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM orders")
-        total_records = cursor.fetchone()[0]
-        st.metric("Total Orders", f"{total_records:,}")
-    except:
-        st.warning("Could not fetch database stats")
-
 # ----------------------
 # 1. ORDERS BY HUB/CITY
 # ----------------------
