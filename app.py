@@ -9,7 +9,6 @@ import requests
 # --- Database Download Function ---
 @st.cache_data
 def download_database():
-    """Download database from external URL if not exists locally"""
     db_path = 'e_commerce.db'
     
     # Check if database already exists
@@ -36,29 +35,6 @@ def download_database():
         
         total_size = int(response.headers.get('content-length', 0))
         
-        with open(db_path, 'wb') as f:
-            if total_size > 0:
-                downloaded = 0
-                progress_bar = st.progress(0)
-                
-                for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
-                        downloaded += len(chunk)
-                        progress = min(downloaded / total_size, 1.0)
-                        progress_bar.progress(progress)
-                        
-                progress_bar.empty()
-            else:
-                f.write(response.content)
-        
-        st.success("✅ Database downloaded successfully!")
-        return db_path
-        
-    except Exception as e:
-        st.error(f"❌ Failed to download database: {e}")
-        st.info("Please check your DATABASE_URL and internet connection")
-        st.stop()
 
 # Download database first
 db_path = download_database()
