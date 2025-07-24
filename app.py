@@ -1,9 +1,13 @@
-# download_db.py - Helper for Streamlit Cloud
+
+import streamlit as st
+import pandas as pd
+import sqlite3
+from datetime import date, datetime
+import plotly.express as px
 import os
 import requests
-import streamlit as st
-from pathlib import Path
 
+# --- Database Download Function ---
 @st.cache_data
 def download_database():
     """Download database from external URL if not exists locally"""
@@ -14,10 +18,14 @@ def download_database():
         return db_path
     
     # Get database URL from secrets or environment
-    db_url = st.secrets.get("sha256:9094ec410714d38a06a802152c7f523e5a0563d59cddd9a074077eca09a6492c") or os.getenv('sha256:9094ec410714d38a06a802152c7f523e5a0563d59cddd9a074077eca09a6492c')
+    try:
+        db_url = st.secrets["sha256:9094ec410714d38a06a802152c7f523e5a0563d59cddd9a074077eca09a6492c"]
+    except:
+        db_url = os.getenv('sha256:9094ec410714d38a06a802152c7f523e5a0563d59cddd9a074077eca09a6492c')
     
     if not db_url:
         st.error("❌ DATABASE_URL not found in secrets or environment variables!")
+        st.info("Please set DATABASE_URL in Streamlit Cloud secrets or environment variables")
         st.stop()
     
     try:
@@ -50,15 +58,8 @@ def download_database():
         
     except Exception as e:
         st.error(f"❌ Failed to download database: {e}")
+        st.info("Please check your DATABASE_URL and internet connection")
         st.stop()
-
-# Enhanced app.py for Streamlit Cloud
-import streamlit as st
-import pandas as pd
-import sqlite3
-from datetime import date, datetime
-import plotly.express as px
-from download_db import download_database
 
 # Download database first
 db_path = download_database()
@@ -84,7 +85,7 @@ conn = get_db_connection()
 with st.sidebar:
     st.markdown("### 📅 Date Filter")
     start_date = st.date_input("Start Date", date(2021, 1, 1))
-    end_date = st.date_input("End Date", date(2021, 4, 30))
+    end_date = st.date_input("End Date", date(2021, 4, 30)
 
 # ----------------------
 # 1. ORDERS BY HUB/CITY
