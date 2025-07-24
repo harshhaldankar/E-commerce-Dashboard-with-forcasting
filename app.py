@@ -85,7 +85,7 @@ conn = get_db_connection()
 with st.sidebar:
     st.markdown("### 📅 Date Filter")
     start_date = st.date_input("Start Date", date(2021, 1, 1))
-    end_date = st.date_input("End Date", date(2021, 4, 30)
+    end_date = st.date_input("End Date", date(2021, 4, 30))
 
 # ----------------------
 # 1. ORDERS BY HUB/CITY
