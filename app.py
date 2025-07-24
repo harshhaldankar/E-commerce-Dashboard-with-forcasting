@@ -9,71 +9,49 @@ import requests
 # --- Database Download Function ---
 @st.cache_data
 def download_database():
-    """Download database from external URL if not exists locally"""
     db_path = 'e_commerce.db'
-    
-    # Check if database already exists
     if os.path.exists(db_path):
         return db_path
-    
-    # Get database URL from secrets or environment
-    try:
-        db_url = st.secrets["Database_URL"]
-    except:
-        db_url = os.getenv('Database_URL')
-    
+
+    db_url = st.secrets.get("Database_URL", os.getenv('Database_URL'))
     if not db_url:
         st.error("❌ DATABASE_URL not found in secrets or environment variables!")
-        st.info("Please set DATABASE_URL in Streamlit Cloud secrets or environment variables")
         st.stop()
-    
+
+    st.info("📥 Downloading database... This may take a moment.")
     try:
-        st.info("📥 Downloading database... This may take a moment.")
-        
-        # Download with progress
         response = requests.get(db_url, stream=True)
         response.raise_for_status()
-        
         total_size = int(response.headers.get('content-length', 0))
-        
         with open(db_path, 'wb') as f:
             if total_size > 0:
                 downloaded = 0
                 progress_bar = st.progress(0)
-                
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
                         downloaded += len(chunk)
-                        progress = min(downloaded / total_size, 1.0)
-                        progress_bar.progress(progress)
-                        
+                        progress_bar.progress(min(downloaded / total_size, 1.0))
                 progress_bar.empty()
             else:
                 f.write(response.content)
-        
         st.success("✅ Database downloaded successfully!")
         return db_path
-        
     except Exception as e:
         st.error(f"❌ Failed to download database: {e}")
-        st.info("Please check your DATABASE_URL and internet connection")
         st.stop()
 
-# Download database first
 db_path = download_database()
 
 # --- Streamlit Page Setup ---
-st.set_page_config(page_title="E-Commerce Dashboard", layout="wide", initial_sidebar_state="auto")
+st.set_page_config(page_title="E-Commerce Dashboard", layout="wide")
 st.title("📦 E-Commerce Operations Dashboard")
 
 # --- Database Connection ---
 @st.cache_resource
 def get_db_connection():
-    """Create database connection with caching"""
     try:
-        conn = sqlite3.connect(db_path, check_same_thread=False)
-        return conn
+        return sqlite3.connect(db_path, check_same_thread=False)
     except Exception as e:
         st.error(f"Database connection failed: {e}")
         st.stop()
