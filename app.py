@@ -9,6 +9,7 @@ import requests
 # --- Database Download Function ---
 @st.cache_data
 def download_database():
+    """Download database from external URL if not exists locally"""
     db_path = 'e_commerce.db'
     
     # Check if database already exists
@@ -25,6 +26,9 @@ def download_database():
         st.error("❌ DATABASE_URL not found in secrets or environment variables!")
         st.info("Please set DATABASE_URL in Streamlit Cloud secrets or environment variables")
         st.stop()
+    
+    try:
+        st.info("📥 Downloading database... This may take a moment.")
         
         # Download with progress
         response = requests.get(db_url, stream=True)
@@ -32,6 +36,29 @@ def download_database():
         
         total_size = int(response.headers.get('content-length', 0))
         
+        with open(db_path, 'wb') as f:
+            if total_size > 0:
+                downloaded = 0
+                progress_bar = st.progress(0)
+                
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        progress = min(downloaded / total_size, 1.0)
+                        progress_bar.progress(progress)
+                        
+                progress_bar.empty()
+            else:
+                f.write(response.content)
+        
+        st.success("✅ Database downloaded successfully!")
+        return db_path
+        
+    except Exception as e:
+        st.error(f"❌ Failed to download database: {e}")
+        st.info("Please check your DATABASE_URL and internet connection")
+        st.stop()
 
 # Download database first
 db_path = download_database()
@@ -302,3 +329,8 @@ if not revenue_df.empty:
 else:
     st.warning("No revenue data available for selected date range.")
 
+# Close DB connection
+try:
+    conn.close()
+except:
+    pass
