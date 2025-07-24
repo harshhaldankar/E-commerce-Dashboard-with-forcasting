@@ -48,7 +48,7 @@ def download_database():
                 progress_bar.empty()
             else:
                 f.write(response.content)
-        
+        st.success("✅ Database downloaded successfully!")
         return db_path
         
     except Exception as e:
