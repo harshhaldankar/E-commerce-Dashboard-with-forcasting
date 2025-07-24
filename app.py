@@ -306,9 +306,3 @@ if not revenue_df.empty:
     st.download_button("⬇️ Download Revenue CSV", csv_revenue, "revenue_metrics.csv", "text/csv")
 else:
     st.warning("No revenue data available for selected date range.")
-
-# Close DB connection
-try:
-    conn.close()
-except:
-    pass
