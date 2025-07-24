@@ -19,9 +19,9 @@ def download_database():
     
     # Get database URL from secrets or environment
     try:
-        db_url = st.secrets["sha256:9094ec410714d38a06a802152c7f523e5a0563d59cddd9a074077eca09a6492c"]
+        db_url = st.secrets["Database_URL"]
     except:
-        db_url = os.getenv('sha256:9094ec410714d38a06a802152c7f523e5a0563d59cddd9a074077eca09a6492c')
+        db_url = os.getenv('Database_URL')
     
     if not db_url:
         st.error("❌ DATABASE_URL not found in secrets or environment variables!")
