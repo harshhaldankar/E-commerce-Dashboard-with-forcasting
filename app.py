@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import sqlite3
@@ -19,11 +18,15 @@ def download_database():
     
     # Get database URL from secrets or environment
     try:
-        db_url = st.secrets["Database_URL"]
+        db_url = st.secrets["DATABASE_URL"]
     except:
-        db_url = os.getenv('Database_URL')
-
-
+        db_url = os.getenv('DATABASE_URL')
+    
+    if not db_url:
+        st.error("❌ DATABASE_URL not found in secrets or environment variables!")
+        st.info("Please set DATABASE_URL in Streamlit Cloud secrets or environment variables")
+        st.stop()
+        
         # Download with progress
         response = requests.get(db_url, stream=True)
         response.raise_for_status()
@@ -45,6 +48,7 @@ def download_database():
                 progress_bar.empty()
             else:
                 f.write(response.content)
+        
         return db_path
         
     except Exception as e:
