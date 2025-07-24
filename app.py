@@ -273,5 +273,5 @@ else:
     st.warning("No revenue data available for selected date range.")
 
 # Close DB connection
-conn.close()
+# conn.close()
 
