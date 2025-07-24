@@ -25,9 +25,6 @@ def download_database():
         st.error("❌ DATABASE_URL not found in secrets or environment variables!")
         st.info("Please set DATABASE_URL in Streamlit Cloud secrets or environment variables")
         st.stop()
-    
-    try:
-        st.info("📥 Downloading database... This may take a moment.")
         
         # Download with progress
         response = requests.get(db_url, stream=True)
