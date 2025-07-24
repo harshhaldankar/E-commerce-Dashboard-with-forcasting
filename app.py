@@ -329,9 +329,3 @@ if not revenue_df.empty:
 else:
     st.warning("No revenue data available for selected date range.")
 
-# Close DB connection
-try:
-    conn.close()
-except:
-    pass
-
