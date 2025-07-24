@@ -1,0 +1,9 @@
+pandas
+python
+dotenv
+zipfile
+os
+requests
+pathlib
+download_db
+sqlite3
