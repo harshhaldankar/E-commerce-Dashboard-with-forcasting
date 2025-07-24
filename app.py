@@ -23,13 +23,7 @@ def download_database():
     except:
         db_url = os.getenv('Database_URL')
 
- if not db_url:
-        st.error("❌ DATABASE_URL not found in secrets or environment variables!")
-        st.info("Please set DATABASE_URL in Streamlit Cloud secrets or environment variables")
-        st.stop()
-    
-    try:
-        st.info("📥 Downloading database... This may take a moment.")
+
         # Download with progress
         response = requests.get(db_url, stream=True)
         response.raise_for_status()
