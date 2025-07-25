@@ -5,6 +5,7 @@ from datetime import date, datetime
 import plotly.express as px
 import os
 import requests
+import time
 
 # --- Database Download Function ---
 @st.cache_data
