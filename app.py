@@ -20,10 +20,10 @@ def download_database():
     # Get database URL from secrets or environment
     db_url = None
     try:
-        db_url = st.secrets["DATABASE_URL"]
+        db_url = st.secrets["Database_URL"]
     except:
         try:
-            db_url = os.getenv('DATABASE_URL')
+            db_url = os.getenv('Database_URL')
         except:
             pass
     
