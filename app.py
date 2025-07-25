@@ -103,16 +103,6 @@ with st.sidebar:
     start_date = st.date_input("Start Date", date(2021, 1, 1))
     end_date = st.date_input("End Date", date(2021, 4, 30))
     
-    # Database info
-    st.markdown("### 📊 Database Info")
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM orders")
-        total_records = cursor.fetchone()[0]
-        st.metric("Total Orders", f"{total_records:,}")
-    except:
-        st.warning("Could not fetch database stats")
-
 # ----------------------
 # 1. ORDERS BY HUB/CITY
 # ----------------------
