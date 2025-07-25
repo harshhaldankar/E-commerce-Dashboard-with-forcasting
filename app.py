@@ -16,7 +16,7 @@ def download_database():
     # Check if database already exists
     if os.path.exists(db_path):
         status_placeholder.info("✅ Database found locally!")
-        time.sleep(1.5)
+        time.sleep(2)
         status_placeholder.empty()
         return db_path
     
@@ -31,7 +31,9 @@ def download_database():
             pass
     
     try:
-        st.info("📥 Downloading database... This may take a moment.")
+        status_placeholder.info("📥 Downloading database... This may take a moment.")
+        time.sleep(2)
+        status_placeholder.empty()
         
         # Download with progress
         response = requests.get(db_url, stream=True)
@@ -57,7 +59,9 @@ def download_database():
         
         # Verify file was created and has content
         if os.path.exists(db_path) and os.path.getsize(db_path) > 0:
-            st.success("✅ Database downloaded successfully!")
+            status_placeholder.success("✅ Database downloaded successfully!")
+            time.sleep(2)
+            status_placeholder.empty()
             return db_path
         else:
             st.error("❌ Database download failed - file is empty or missing")
