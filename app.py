@@ -11,10 +11,10 @@ import requests
 def download_database():
     """Download database from external URL if not exists locally"""
     db_path = 'e_commerce.db'
-    
+    Status_placeholder = st.empty()
     # Check if database already exists
     if os.path.exists(db_path):
-        st.info("✅ Database found locally!")
+        status_placeholder.info("✅ Database found locally!")
         return db_path
     
     # Get database URL from secrets or environment
