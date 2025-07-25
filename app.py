@@ -27,27 +27,6 @@ def download_database():
         except:
             pass
     
-    if not db_url:
-        st.error("❌ DATABASE_URL not found!")
-        st.info("""
-        **To fix this:**
-        
-        **For Streamlit Cloud:**
-        1. Go to your app settings
-        2. Click 'Secrets' 
-        3. Add: `DATABASE_URL = "your-database-download-url"`
-        
-        **For local testing:**
-        1. Set environment variable: `export DATABASE_URL="your-url"`
-        2. Or create a .env file with: `DATABASE_URL=your-url`
-        
-        **Get your database URL:**
-        1. Upload your database to GitHub Releases
-        2. Copy the download URL
-        """)
-        st.stop()
-        return None
-    
     try:
         st.info("📥 Downloading database... This may take a moment.")
         
