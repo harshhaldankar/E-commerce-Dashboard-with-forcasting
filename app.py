@@ -9,37 +9,107 @@ import requests
 # --- Database Download Function ---
 @st.cache_data
 def download_database():
+    """Download database from external URL if not exists locally"""
     db_path = 'e_commerce.db'
+    
+    # Check if database already exists
     if os.path.exists(db_path):
+        st.info("✅ Database found locally!")
         return db_path
-
-    db_url = st.secrets.get("Database_URL", os.getenv('Database_URL'))
-    if not db_url:
-        st.error("❌ DATABASE_URL not found in secrets or environment variables!")
-        st.stop()
+    
+    # Get database URL from secrets or environment
+    db_url = None
     try:
+        db_url = st.secrets["DATABASE_URL"]
+    except:
+        try:
+            db_url = os.getenv('DATABASE_URL')
+        except:
+            pass
+    
+    if not db_url:
+        st.error("❌ DATABASE_URL not found!")
+        st.info("""
+        **To fix this:**
+        
+        **For Streamlit Cloud:**
+        1. Go to your app settings
+        2. Click 'Secrets' 
+        3. Add: `DATABASE_URL = "your-database-download-url"`
+        
+        **For local testing:**
+        1. Set environment variable: `export DATABASE_URL="your-url"`
+        2. Or create a .env file with: `DATABASE_URL=your-url`
+        
+        **Get your database URL:**
+        1. Upload your database to GitHub Releases
+        2. Copy the download URL
+        """)
+        st.stop()
+        return None
+    
+    try:
+        st.info("📥 Downloading database... This may take a moment.")
+        
+        # Download with progress
         response = requests.get(db_url, stream=True)
         response.raise_for_status()
+        
+        total_size = int(response.headers.get('content-length', 0))
+        
+        with open(db_path, 'wb') as f:
+            if total_size > 0:
+                downloaded = 0
+                progress_bar = st.progress(0)
+                
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        progress = min(downloaded / total_size, 1.0)
+                        progress_bar.progress(progress)
+                        
+                progress_bar.empty()
+            else:
+                f.write(response.content)
+        
+        # Verify file was created and has content
+        if os.path.exists(db_path) and os.path.getsize(db_path) > 0:
+            st.success("✅ Database downloaded successfully!")
+            return db_path
+        else:
+            st.error("❌ Database download failed - file is empty or missing")
+            return None
+        
     except Exception as e:
         st.error(f"❌ Failed to download database: {e}")
-        st.stop()
+        st.info("Please check your DATABASE_URL and internet connection")
+        return None
 
+# --- Streamlit Page Setup (Must be first) ---
+st.set_page_config(page_title="E-Commerce Dashboard", layout="wide", initial_sidebar_state="auto")
+st.title("📦 E-Commerce Operations Dashboard")
+
+# Download database after page config
 db_path = download_database()
 
-# --- Streamlit Page Setup ---
-st.set_page_config(page_title="E-Commerce Dashboard", layout="wide")
-st.title("📦 E-Commerce Operations Dashboard")
+# Safety check
+if not db_path or not os.path.exists(db_path):
+    st.error("❌ Database not available. Cannot proceed.")
+    st.stop()
 
 # --- Database Connection ---
 @st.cache_resource
-def get_db_connection():
+def get_db_connection(database_path):
+    """Create database connection with caching"""
     try:
-        return sqlite3.connect(db_path, check_same_thread=False)
+        conn = sqlite3.connect(database_path, check_same_thread=False)
+        return conn
     except Exception as e:
         st.error(f"Database connection failed: {e}")
         st.stop()
 
-conn = get_db_connection()
+conn = get_db_connection(db_path)
 
 # --- Sidebar Filters ---
 with st.sidebar:
@@ -47,6 +117,16 @@ with st.sidebar:
     start_date = st.date_input("Start Date", date(2021, 1, 1))
     end_date = st.date_input("End Date", date(2021, 4, 30))
     
+    # Database info
+    st.markdown("### 📊 Database Info")
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM orders")
+        total_records = cursor.fetchone()[0]
+        st.metric("Total Orders", f"{total_records:,}")
+    except:
+        st.warning("Could not fetch database stats")
+
 # ----------------------
 # 1. ORDERS BY HUB/CITY
 # ----------------------
