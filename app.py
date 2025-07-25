@@ -15,6 +15,8 @@ def download_database():
     # Check if database already exists
     if os.path.exists(db_path):
         status_placeholder.info("✅ Database found locally!")
+        time.sleep(1.5)
+        status_placeholder.empty()
         return db_path
     
     # Get database URL from secrets or environment
