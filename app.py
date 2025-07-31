@@ -15,7 +15,7 @@ def download_database():
     status_placeholder = st.empty()
     # Check if database already exists
     if os.path.exists(db_path):
-        status_placeholder.info("✅ Database found locally!")
+        status_placeholder.info(" Database found locally!")
         time.sleep(2)
         status_placeholder.empty()
         return db_path
@@ -31,7 +31,7 @@ def download_database():
             pass
     
     try:
-        status_placeholder.info("📥 Downloading database... This may take a moment.")
+        status_placeholder.info(" Downloading database... This may take a moment.")
         time.sleep(2)
         status_placeholder.empty()
         
@@ -59,7 +59,7 @@ def download_database():
         
         # Verify file was created and has content
         if os.path.exists(db_path) and os.path.getsize(db_path) > 0:
-            status_placeholder.success("✅ Database downloaded successfully!")
+            status_placeholder.success(" Database downloaded successfully!")
             time.sleep(2)
             status_placeholder.empty()
             return db_path
@@ -74,7 +74,7 @@ def download_database():
 
 # --- Streamlit Page Setup (Must be first) ---
 st.set_page_config(page_title="E-Commerce Dashboard", layout="wide", initial_sidebar_state="auto")
-st.title("📦 E-Commerce Operations Dashboard")
+st.title(" E-Commerce Operations Dashboard")
 
 # Download database after page config
 db_path = download_database()
@@ -99,7 +99,7 @@ conn = get_db_connection(db_path)
 
 # --- Sidebar Filters ---
 with st.sidebar:
-    st.markdown("### 📅 Date Filter")
+    st.markdown("###  Date Filter")
     start_date = st.date_input("Start Date", date(2021, 1, 1))
     end_date = st.date_input("End Date", date(2021, 4, 30))
     
@@ -107,7 +107,7 @@ with st.sidebar:
 # 1. ORDERS BY HUB/CITY
 # ----------------------
 
-st.header("🏙️ Orders by City & Hub")
+st.header(" Orders by City & Hub")
 
 # SQLite compatible query
 query_orders = """
@@ -177,22 +177,22 @@ except Exception as e:
     cancelled_percent = "0%"
 
 col1, col2, col3 = st.columns(3)
-col1.metric("📦 Total Orders", f"{total_orders:,}")
-col2.metric("❌ Cancelled Orders", f"{cancelled_orders:,}")
-col3.metric("🚫 Cancellation Rate", cancelled_percent)
+col1.metric(" Total Orders", f"{total_orders:,}")
+col2.metric(" Cancelled Orders", f"{cancelled_orders:,}")
+col3.metric(" Cancellation Rate", cancelled_percent)
 
 if not df_orders.empty:
     st.dataframe(df_orders, use_container_width=True)
     # Download Orders CSV
     csv_orders = df_orders.to_csv(index=False).encode("utf-8")
-    st.download_button("⬇️ Download Orders CSV", csv_orders, "order_metrics.csv", "text/csv")
+    st.download_button("Download Orders CSV", csv_orders, "order_metrics.csv", "text/csv")
 else:
     st.warning("No order data for selected filters.")
 
 # -------------------------------------
 # 2. DRIVER PERFORMANCE METRICS SECTION
 # -------------------------------------
-st.header("👨‍✈️ Driver Performance Metrics")
+st.header("Driver Performance Metrics")
 
 query_driver = """
 SELECT 
@@ -242,7 +242,7 @@ except Exception as e:
 # 3. REVENUE & PAYMENT PERFORMANCE
 # -------------------------------
 
-st.header("💰 Revenue by City & Hub")
+st.header("Revenue by City & Hub")
 
 revenue_query = """
 SELECT
@@ -307,15 +307,15 @@ except Exception as e:
     avg_order_value = 0.0
 
 col1, col2, col3 = st.columns(3)
-col1.metric("💰 Total Revenue", f"${total_revenue:,.2f}")
-col2.metric("📦 Total Orders", f"{total_orders_rev:,}")
-col3.metric("💳 Avg Order Value", f"${avg_order_value:,.2f}")
+col1.metric("Total Revenue", f"${total_revenue:,.2f}")
+col2.metric("Total Orders", f"{total_orders_rev:,}")
+col3.metric("Avg Order Value", f"${avg_order_value:,.2f}")
 
 # Revenue Table & Chart
 if not revenue_df.empty:
     st.dataframe(revenue_df, use_container_width=True)
 
-    st.subheader("📊 Total Revenue by City and Hub")
+    st.subheader("Total Revenue by City and Hub")
     fig = px.bar(
         revenue_df,
         x="hub",
@@ -332,6 +332,6 @@ if not revenue_df.empty:
     st.plotly_chart(fig, use_container_width=True)
 
     csv_revenue = revenue_df.to_csv(index=False).encode("utf-8")
-    st.download_button("⬇️ Download Revenue CSV", csv_revenue, "revenue_metrics.csv", "text/csv")
+    st.download_button("Download Revenue CSV", csv_revenue, "revenue_metrics.csv", "text/csv")
 else:
     st.warning("No revenue data available for selected date range.")
