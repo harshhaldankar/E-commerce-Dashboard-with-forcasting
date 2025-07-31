@@ -231,7 +231,7 @@ try:
     if not driver_metrics.empty:
         st.dataframe(driver_metrics, use_container_width=True)
         csv_driver = driver_metrics.to_csv(index=False).encode("utf-8")
-        st.download_button("⬇️ Download Driver Metrics CSV", csv_driver, "driver_metrics.csv", "text/csv")
+        st.download_button("Download Driver Metrics CSV", csv_driver, "driver_metrics.csv", "text/csv")
     else:
         st.warning("No driver data available for selected date range.")
 
